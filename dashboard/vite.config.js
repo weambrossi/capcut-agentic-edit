@@ -14,5 +14,7 @@ const watchSkills = {
 
 export default defineConfig({
   plugins: [react(), watchSkills],
+  // inline config stops Vite picking up a Tailwind/PostCSS config from a parent folder
+  css: { postcss: {} },
   server: { port: 5180, fs: { allow: ['..'] } },
 });
