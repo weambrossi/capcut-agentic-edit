@@ -30,3 +30,6 @@ dashboard/dist/
 # reference videos stay local; references/library.json (metadata) is committed
 references/videos/
 references/thumbs/
+
+# edit records (Learn From Edits): local only, they hold caption text and paths
+edits/

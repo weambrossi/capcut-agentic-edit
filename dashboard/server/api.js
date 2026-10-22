@@ -11,6 +11,7 @@ import {
   MAX_BYTES, VIDEO_TYPES, listReferences, makeThumb, probe, readLibrary, sniffVideo, syncReferenceDocs, thumbPath,
   withLocalState, writeLibrary,
 } from './references.js';
+import { isCapcutRunning, listCapcutDrafts, listRecords, recordEdit, reviseEdit, setStyle } from './edits.js';
 
 const run = promisify(execFile);
 const ID = /^[a-z0-9][a-z0-9-]{0,63}$/;
@@ -87,6 +88,25 @@ export function createApi(root) {
       skillFile(id);
       const rel = `.claude/skills/${id}/SKILL.md`;
       return { text: await git(root, ['show', `${hash}:${rel}`]) };
+    }],
+
+    // edit records (Learn From Edits, issues #1-#2)
+    ['GET', /^\/api\/edits$/, () => ({
+      records: listRecords(root),
+      drafts: listCapcutDrafts(),
+      capcutRunning: isCapcutRunning(),
+    })],
+    ['POST', /^\/api\/edits$/, async (req) => {
+      const { draft, style } = await json(req);
+      return recordEdit(root, { draft, style: style || null, styles: styles().map((s) => s.id) });
+    }],
+    ['POST', /^\/api\/edits\/([a-z0-9-]+)\/revise$/, async (req, [id]) => {
+      const { draft, force } = await json(req);
+      return reviseEdit(root, id, { draft: draft || null, force: Boolean(force) });
+    }],
+    ['PATCH', /^\/api\/edits\/([a-z0-9-]+)$/, async (req, [id]) => {
+      const { style } = await json(req);
+      return setStyle(root, id, style || null, styles().map((s) => s.id));
     }],
 
     ['GET', /^\/api\/references$/, () => listReferences(root)],

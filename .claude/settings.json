@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "mcp__capcut__capcut_save_draft",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/edits.mjs\" hook",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

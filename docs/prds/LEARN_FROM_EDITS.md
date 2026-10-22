@@ -1,6 +1,6 @@
 # PRD: Learn From Previous Edits
 
-Status: Draft · Owner: Ethan · Last updated: 2026-10-22
+Status: In progress (phases 1–2 done) · Owner: Ethan · Last updated: 2026-10-22
 
 ## 1. Problem
 
@@ -246,14 +246,26 @@ Versioning:
 - No style file changes until I accept; accepted changes appear in the style's History as a commit.
 - I can restore any earlier version of a style's rules.
 
-## 16. Open questions
+## 16. Decisions
 
-1. Where do edit records live: committed in `edits/`, or local only with an opt-in commit?
-2. How do we detect "Claude finished building a draft" reliably: wrap `capcut_save_draft`, or an
-   explicit "record this edit" step in each style's Process section?
-3. Which CapCut versions/draft profiles must be supported (`capcut_legacy` today)?
-4. What thresholds define "systematic" within one project (e.g. ≥60 % of instances)?
-5. Should proposals be generated on demand or after each revised capture?
-6. How should Python-rendered edits expose a comparable timeline?
-7. Should learned preferences be written into the main rule sections or a separate "Learned"
+- **Records are local only.** `edits/` is gitignored: the repo is public and records hold caption
+  text and file paths.
+- **Recording is a hook plus a script.** A Claude Code `PostToolUse` hook on `capcut_save_draft`
+  (`.claude/settings.json`) runs `node scripts/edits.mjs hook`, which snapshots the saved draft and
+  picks the style from the session transcript (the last style skill used). The same script records
+  any draft by hand (`record`), e.g. drafts patched by `add_vote_heads.py`.
+- **v1 covers CapCut drafts only.** Python-rendered videos come later.
+- **Snapshots are raw `draft_info.json`.** The newer of the root file and
+  `Timelines/<main_timeline_id>/draft_info.json` is used. Normalising happens in phase 3.
+- **Finding the revised copy.** `capcut_save_draft` writes the draft into VectCutAPI, and it's
+  copied into CapCut afterwards, so `revise` looks in CapCut's drafts folder by folder name, then by
+  timeline id, or takes an explicit draft. A timeline-id mismatch needs `--force`.
+
+## 17. Open questions
+
+1. Which CapCut versions/draft profiles must be supported (`capcut_legacy` today)?
+2. What thresholds define "systematic" within one project (e.g. ≥60 % of instances)?
+3. Should proposals be generated on demand or after each revised capture?
+4. How should Python-rendered edits expose a comparable timeline?
+5. Should learned preferences be written into the main rule sections or a separate "Learned"
    section that's easier to audit?

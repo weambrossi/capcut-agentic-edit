@@ -4,8 +4,9 @@ import Sidebar from './Sidebar.jsx';
 import StylePage from './StylePage.jsx';
 import SkillsPage from './SkillsPage.jsx';
 import NewStyle from './NewStyle.jsx';
+import EditsPage from './EditsPage.jsx';
 
-// #/styles/<id>/<tab>, #/skills, #/skills/<id>, #/new-style
+// #/styles/<id>/<tab>, #/skills, #/skills/<id>, #/new-style, #/edits
 function parseRoute() {
   const [section, id, tab] = window.location.hash.replace(/^#\/?/, '').split('/');
   return { section: section || 'styles', id, tab };
@@ -51,6 +52,8 @@ export default function App() {
     page = <p className="muted">{error || 'Loading…'}</p>;
   } else if (route.section === 'new-style') {
     page = <NewStyle onCreated={async (s) => { await reload(); go(`styles/${s.id}`); }} />;
+  } else if (route.section === 'edits') {
+    page = <EditsPage styles={styles} />;
   } else if (route.section === 'skills') {
     page = <SkillsPage skills={editingSkills} styles={styles} selectedId={route.id} onSaved={replaceSkill} />;
   } else {

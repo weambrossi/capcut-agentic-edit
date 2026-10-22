@@ -36,6 +36,10 @@ export default function Sidebar({ route, styles, editingSkills, references }) {
             <span className="nav-item-name">{s.title}</span>
           </a>
         ))}
+
+        <div className="nav-head nav-head-gap">
+          <a href="#/edits" className={'nav-section' + (route.section === 'edits' ? ' is-open' : '')}>Edit history</a>
+        </div>
       </nav>
     </aside>
   );
