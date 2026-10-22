@@ -27,12 +27,6 @@ Skills with `metadata: kind: style` in their frontmatter are video styles; any o
 editing skill (a reusable capability). A style lists the editing skills it uses under
 `metadata: uses:`.
 
-When you save a CapCut draft with `capcut_save_draft`, a hook records it as an original edit in
-`edits/` (local, gitignored) and tells you the record id. Pass that id on to the user: after they
-revise the draft in CapCut and close it, `node scripts/edits.mjs revise <id>` (or the dashboard's
-Edit history page) captures their version for Learn From Edits (`docs/prds/LEARN_FROM_EDITS.md`).
-For drafts built another way, record them with `node scripts/edits.mjs record <draft> --style <style>`.
-
 ## Rules
 
 - **Close CapCut before touching `draft_info.json`.** CapCut overwrites it on exit. Back up the

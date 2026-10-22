@@ -170,23 +170,6 @@ progress { flex: 1; min-width: 6rem; height: 6px; }
 .history-meta { white-space: nowrap; font-size: 12px; }
 .history .code { margin-bottom: 0.75rem; }
 
-/* edit history */
-.stack-top { margin-top: 1.5rem; }
-select { padding: 0.4rem 0.5rem; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--fg); font: inherit; max-width: 100%; }
-.select-quiet { padding: 0 0.25rem; border-color: transparent; background: none; color: var(--muted); font-size: 12px; }
-.select-quiet:hover { border-color: var(--line); }
-.inline-form { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 0.75rem; padding-bottom: 1.25rem; border-bottom: 1px solid var(--line); }
-.inline-form .field { flex: 1 1 12rem; min-width: 0; }
-.inline-form .full { flex-basis: 100%; }
-.edits { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.edit { display: flex; flex-direction: column; gap: 0.45rem; padding: 1rem 0; border-bottom: 1px solid var(--line); }
-.edit-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem 0.9rem; }
-.edit-meta code { overflow-wrap: anywhere; }
-.summary { display: grid; grid-template-columns: 5rem minmax(0, 1fr); gap: 0.75rem; }
-.edit-fix { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.75rem; border: 1px solid var(--line); border-radius: 6px; }
-.check { display: inline-flex; align-items: center; gap: 0.4rem; }
-.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
-
 /* skills list */
 .list { list-style: none; margin: 1.5rem 0 0; padding: 0; border-top: 1px solid var(--line); }
 .list-row { display: flex; flex-direction: column; gap: 0.15rem; padding: 0.75rem 0; border-bottom: 1px solid var(--line); color: var(--fg); }

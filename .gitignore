@@ -31,5 +31,3 @@ dashboard/dist/
 references/videos/
 references/thumbs/
 
-# edit records (Learn From Edits): local only, they hold caption text and paths
-edits/

@@ -19,7 +19,6 @@ Needs Node, Python 3, ffmpeg and CapCut desktop; `brew install whisper-cpp` for 
 - `.claude/skills/` – edit styles: `funny-edit`, `promo-video`, `serious-video`
 - `dashboard/` – local styles dashboard (`npm run dev`)
 - `references/` – inspiration-video metadata (videos themselves are gitignored)
-- `scripts/edits.mjs` – record Claude's drafts and your revisions (Learn From Edits)
 - `docs/` – architecture notes, PRDs, feature ideas
 - `CLAUDE.md` – project rules Claude loads every session
 - `make_*.py` – Python renderers for past projects (reference implementations for the skills)
@@ -47,5 +46,5 @@ Claude pick it. Skills without `kind: style` show up as editing skills.
 
 ## Plans
 
-- [Learn From Previous Edits PRD](docs/prds/LEARN_FROM_EDITS.md) (issues #1–#8; #1 and #2 done: edit recording)
+- [Learn From Previous Edits PRD](docs/prds/LEARN_FROM_EDITS.md) (shelved)
 - [Additional video editing features](docs/ADDITIONAL_VIDEO_EDITING_FEATURES.md)

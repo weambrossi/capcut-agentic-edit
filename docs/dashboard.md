@@ -58,15 +58,6 @@ Claude cannot watch a video from its path. `references.md` tells it to extract f
 and look at them, and to transcribe audio with whisper-cli, both tools this repo already uses.
 Automatic analysis of references is future work.
 
-## Edit history
-
-The Edit history page lists edit records from `edits/` (gitignored), the first two phases of
-[Learn From Previous Edits](prds/LEARN_FROM_EDITS.md): Claude's original CapCut timeline and your
-revised one, with segment counts for each. Records are created automatically by the
-`capcut_save_draft` hook in `.claude/settings.json`, from this page, or with
-`node scripts/edits.mjs record`. "Capture my revision" refuses while CapCut is open. The logic lives
-in `server/edits.js`, shared by the API and the CLI.
-
 ## Future work
 
 - **Richer style ↔ skill relationships.** `uses` is a plain list. Per-style configuration of a skill

@@ -1,6 +1,10 @@
 # PRD: Learn From Previous Edits
 
-Status: In progress (phases 1–2 done) · Owner: Ethan · Last updated: 2026-10-22
+> **Shelved.** Reference videos (uploaded per style in the dashboard) cover the need for now.
+> Phases 1–2 (edit recording) were built and then removed in favour of that; issues #3–#8 are
+> closed as not planned. Kept for reference if this is picked up again.
+
+Status: Shelved (2026-10-22) · Owner: Ethan
 
 ## 1. Problem
 
