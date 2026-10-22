@@ -18,6 +18,15 @@ Pick the skill that matches the edit before planning it:
 - `.claude/skills/promo-video` – 30 s vertical ad: hook, title card, one line per shot, CTA end card
 - `.claude/skills/serious-video` – calm pacing, clean captions, no gags
 
+Each style folder has a generated `references.md`: the user's inspiration videos for that style
+(local files in `references/videos/`) and what they like about each. Read it before planning an
+edit in that style. Don't edit it by hand; it is rebuilt from `references/library.json` by the
+dashboard (`cd dashboard && npm run dev`, see `docs/dashboard.md`).
+
+Skills with `metadata: kind: style` in their frontmatter are video styles; any other skill is an
+editing skill (a reusable capability). A style lists the editing skills it uses under
+`metadata: uses:`.
+
 ## Rules
 
 - **Close CapCut before touching `draft_info.json`.** CapCut overwrites it on exit. Back up the

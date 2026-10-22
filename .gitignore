@@ -26,3 +26,7 @@ votes_names_local.py
 # dashboard app
 node_modules/
 dashboard/dist/
+
+# reference videos stay local; references/library.json (metadata) is committed
+references/videos/
+references/thumbs/

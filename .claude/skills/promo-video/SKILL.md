@@ -1,6 +1,9 @@
 ---
 name: promo-video
 description: Make a short promotional / ad video in my style – 30 s vertical 9:16, question hook, title card, one punchy caption per shot, zoom punch + flash on every cut, yellow CTA pill end card. Use when the user asks for a promo, ad, trailer, announcement, launch or "get people to book/buy/sign up" video.
+metadata:
+  kind: style
+  source: custom
 ---
 
 # Promo video
@@ -23,15 +26,17 @@ a new promo and change the `SHOTS`, `TEXTS`, `PUNCHES`, `FLASHES` tables and the
 | 5.5–26 s | **Proof**: one short caption per shot, 2–4 words ("We show up.", "Crowd approved.", "No mics. No backing track."). |
 | last ~3.5 s | **End card**: brand name, `Service · Service · Service` line, CTA in a yellow pill ("DM us to book"), optional joke aside. |
 
-## Visual style
+## Pacing & Transitions
 
-- Font **Avenir Next** (Bold; Heavy for the brand name). Brand yellow `(255, 214, 10)`, white
-  text otherwise, dark text on the yellow pill.
+- On every cut: zoom punch (6–8 %, 0.35 s decay) and a white flash (40 %, 0.15 s). A small shake on
+  the biggest moments.
+
+## Captions & Typography
+
+- Font **Avenir Next** (Bold; Heavy for the brand name). White text, dark text on the yellow pill.
 - **Soft drop shadow, not outlines.** Captions fade + rise in over 0.22 s with a slight scale settle.
 - Main captions sit in the top third (y≈300–330); lyric/quote captions at the bottom (y≈1600) in a
   translucent black rounded box.
-- On every cut: zoom punch (6–8 %, 0.35 s decay) and a white flash (40 %, 0.15 s). A small shake on
-  the biggest moments.
 
 ## Sound
 
@@ -41,8 +46,17 @@ a new promo and change the `SHOTS`, `TEXTS`, `PUNCHES`, `FLASHES` tables and the
   CTA appears.
 - RMS-normalise every clip to ~0.12, short fades on every edit, soft-clip the final mix.
 
+## Color & Visual Effects
+
+- Brand yellow `(255, 214, 10)` for the brand name and CTA pill; everything else white.
+
 ## Process
 
 1. Ask for brand name, offer, CTA and the footage/song paths if not given.
 2. Draft the `TEXTS` copy and shot list as a table for approval before rendering.
 3. `--preview` 4–6 key frames, check them, then render the full video to `out/`.
+
+## Reference videos
+
+Before planning an edit, read [references.md](references.md): the user's inspiration videos for
+this style and what they like about each.

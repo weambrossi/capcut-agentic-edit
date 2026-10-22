@@ -1,6 +1,9 @@
 ---
 name: serious-video
 description: Make a serious / sincere edit – interviews, tributes, recaps, announcements with weight, documentary-style pieces. Calm pacing, clean captions, music bed, no gags or meme SFX. Use when the user asks for a serious, emotional, professional, tribute, recap or documentary-style video.
+metadata:
+  kind: style
+  source: starter
 ---
 
 # Serious video
@@ -13,15 +16,19 @@ description: Make a serious / sincere edit – interviews, tributes, recaps, ann
 - 16:9 1920×1080 for YouTube/presentations, 9:16 1080×1920 for socials. 30 fps.
 - Prefer building it as an editable **CapCut draft via the MCP tools** so the user can fine-tune.
 
-## Visual style
+## Pacing & Transitions
+
+- Let shots run 3–8 s; hold on faces after an emotional line.
+- Transitions: straight cuts or short cross-dissolves (≤0.5 s). No zoom punches, flashes or shakes.
+- Slow push-ins (≤5 % over a shot) on stills and wide shots only.
+- Open on the strongest line or image, close on a quiet moment + title/date card, fade to black.
+
+## Captions & Typography
 
 - One clean sans font (Avenir Next Medium/Demi), white, soft drop shadow, no strokes, no emoji.
 - Captions at the bottom third, sentence case, max ~2 lines; burn in full subtitles from the
   whisper transcript (`capcut_add_subtitle`).
 - Lower-third name tags for speakers: name + role, fade in 0.4 s, hold 3–4 s.
-- Transitions: straight cuts or short cross-dissolves (≤0.5 s). No zoom punches, flashes or shakes.
-- Slow push-ins (≤5 % over a shot) on stills and wide shots only.
-- Optional slight desaturation / warm grade applied consistently to every clip.
 
 ## Sound
 
@@ -29,12 +36,16 @@ description: Make a serious / sincere edit – interviews, tributes, recaps, ann
 - Cut on sentence boundaries from the transcript; never mid-word.
 - Room tone or a short music swell to cover jumps. No SFX hits.
 
-## Pacing
+## Color & Visual Effects
 
-- Let shots run 3–8 s; hold on faces after an emotional line.
-- Open on the strongest line or image, close on a quiet moment + title/date card, fade to black.
+- Optional slight desaturation / warm grade applied consistently to every clip.
 
 ## Process
 
 1. Transcribe, then propose a paper edit (ordered quotes with timestamps) for approval.
 2. Build the draft, `capcut_save_draft`, and tell the user where it landed in CapCut.
+
+## Reference videos
+
+Before planning an edit, read [references.md](references.md): the user's inspiration videos for
+this style and what they like about each.

@@ -1,69 +1,92 @@
-import { useEffect, useMemo, useState } from 'react';
-import { marked } from 'marked';
-import { skills } from './skills.js';
+import { useCallback, useEffect, useState } from 'react';
+import { api } from './api.js';
+import Sidebar from './Sidebar.jsx';
+import StylePage from './StylePage.jsx';
+import SkillsPage from './SkillsPage.jsx';
+import NewStyle from './NewStyle.jsx';
 
-const title = (name) => name.replace(/-/g, ' ').replace(/^./, (c) => c.toUpperCase());
-
-function useSelected() {
-  const initial = () => {
-    const id = window.location.hash.slice(1);
-    return skills.some((s) => s.id === id) ? id : skills[0]?.id;
-  };
-  const [id, setId] = useState(initial);
-  useEffect(() => {
-    const onHash = () => setId(initial());
-    window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
-  }, []);
-  return id;
+// #/styles/<id>/<tab>, #/skills, #/skills/<id>, #/new-style
+function parseRoute() {
+  const [section, id, tab] = window.location.hash.replace(/^#\/?/, '').split('/');
+  return { section: section || 'styles', id, tab };
 }
 
+export const go = (path) => { window.location.hash = '/' + path; };
+
 export default function App() {
-  const selectedId = useSelected();
-  const skill = skills.find((s) => s.id === selectedId);
-  const html = useMemo(() => (skill ? marked.parse(skill.body) : ''), [skill]);
-  const starters = skills.filter((s) => s.starter).length;
+  const [route, setRoute] = useState(parseRoute);
+  const [skills, setSkills] = useState(null);
+  const [references, setReferences] = useState([]);
+  const [error, setError] = useState('');
+
+  const reload = useCallback(async () => {
+    try {
+      const [s, r] = await Promise.all([api.skills(), api.references()]);
+      setSkills(s);
+      setReferences(r);
+      setError('');
+    } catch (e) {
+      setError(e.message);
+    }
+  }, []);
+
+  useEffect(() => {
+    reload();
+    const onHash = () => setRoute(parseRoute());
+    // pick up edits made to SKILL.md files outside the dashboard
+    window.addEventListener('hashchange', onHash);
+    window.addEventListener('focus', reload);
+    return () => {
+      window.removeEventListener('hashchange', onHash);
+      window.removeEventListener('focus', reload);
+    };
+  }, [reload]);
+
+  const styles = (skills || []).filter((s) => s.kind === 'style');
+  const editingSkills = (skills || []).filter((s) => s.kind === 'skill');
+  const replaceSkill = (next) => setSkills((all) => all.map((s) => (s.id === next.id ? next : s)));
+
+  let page;
+  if (!skills) {
+    page = <p className="muted">{error || 'Loading…'}</p>;
+  } else if (route.section === 'new-style') {
+    page = <NewStyle onCreated={async (s) => { await reload(); go(`styles/${s.id}`); }} />;
+  } else if (route.section === 'skills') {
+    page = <SkillsPage skills={editingSkills} styles={styles} selectedId={route.id} onSaved={replaceSkill} />;
+  } else {
+    const style = styles.find((s) => s.id === route.id) || styles[0];
+    page = style
+      ? (
+        <StylePage
+          key={style.id}
+          style={style}
+          tab={route.tab || 'overview'}
+          styles={styles}
+          editingSkills={editingSkills}
+          references={references}
+          onSkillSaved={replaceSkill}
+          onReferencesChanged={setReferences}
+        />
+      )
+      : <EmptyStyles />;
+  }
 
   return (
     <div className="app">
-      <aside className="side">
-        <header className="brand">
-          <h1>Edit styles</h1>
-          <p>
-            {skills.length} styles · {skills.length - starters} from past edits
-            {starters ? ` · ${starters} starter` : ''}
-          </p>
-        </header>
-        <nav className="list">
-          {skills.map((s) => (
-            <a key={s.id} href={'#' + s.id} className={'item' + (s.id === selectedId ? ' is-active' : '')}>
-              <span className="item-top">
-                <span className="item-name">{title(s.name)}</span>
-                <span className={'dot' + (s.starter ? ' is-starter' : '')} title={s.starter ? 'Starter defaults' : 'From a past edit'} />
-              </span>
-              <span className="item-desc">{s.description.split(' – ')[1]?.split('. Use when')[0] || s.description}</span>
-            </a>
-          ))}
-        </nav>
-      </aside>
-
+      <Sidebar route={route} styles={styles} editingSkills={editingSkills} references={references} />
       <main className="main">
-        {skill ? (
-          <article>
-            <div className="eyebrow">
-              <span className={'status' + (skill.starter ? ' is-starter' : '')}>
-                {skill.starter ? 'Starter defaults' : 'From a past edit'}
-              </span>
-              <code>{skill.path}</code>
-            </div>
-            <h2>{title(skill.name)}</h2>
-            <p className="lede">{skill.description}</p>
-            <div className="md" dangerouslySetInnerHTML={{ __html: html }} />
-          </article>
-        ) : (
-          <p className="empty">No skills yet. Add one at .claude/skills/&lt;name&gt;/SKILL.md.</p>
-        )}
+        {error && skills && <p className="banner">{error}</p>}
+        {page}
       </main>
+    </div>
+  );
+}
+
+function EmptyStyles() {
+  return (
+    <div className="empty">
+      <h2>No video styles yet</h2>
+      <p>A style describes how a video should look and feel. <a href="#/new-style">Create your first style</a>.</p>
     </div>
   );
 }

@@ -17,7 +17,9 @@ Needs Node, Python 3, ffmpeg and CapCut desktop; `brew install whisper-cpp` for 
 ## Layout
 
 - `.claude/skills/` – edit styles: `funny-edit`, `promo-video`, `serious-video`
-- `dashboard/` – local page for browsing the styles
+- `dashboard/` – local styles dashboard (`npm run dev`)
+- `references/` – inspiration-video metadata (videos themselves are gitignored)
+- `docs/` – architecture notes, PRDs, feature ideas
 - `CLAUDE.md` – project rules Claude loads every session
 - `make_*.py` – Python renderers for past projects (reference implementations for the skills)
 - `patches/` – local fixes applied to the vendored MCP server
@@ -26,8 +28,11 @@ Needs Node, Python 3, ffmpeg and CapCut desktop; `brew install whisper-cpp` for 
 
 ## Styles dashboard
 
-A small Vite + React page that lists every skill in `.claude/skills/` and renders what it does.
-It reads the SKILL.md files directly, so new or edited skills show up on their own.
+A local Vite + React tool for video styles, editing skills and inspiration videos: browse and edit
+each style's rules (written straight back to its SKILL.md), see its git history, and upload
+reference videos that Claude reads when it uses the style. Videos stay on your machine in
+`references/videos/` (gitignored); their names and notes are committed in
+`references/library.json`. Details: [docs/dashboard.md](docs/dashboard.md).
 
 ```bash
 cd dashboard && npm install && npm run dev   # http://localhost:5180
@@ -35,5 +40,11 @@ cd dashboard && npm install && npm run dev   # http://localhost:5180
 
 ## Adding a style
 
-Create `.claude/skills/<name>/SKILL.md` with a `name` and `description` frontmatter (the
-description is what makes Claude pick it), then describe format, visuals, sound and pacing.
+Use **Create style** in the dashboard, or create `.claude/skills/<name>/SKILL.md` by hand with
+`name`, `description` and `metadata: kind: style` in the frontmatter. The description is what makes
+Claude pick it. Skills without `kind: style` show up as editing skills.
+
+## Plans
+
+- [Learn From Previous Edits PRD](docs/prds/LEARN_FROM_EDITS.md) (issues #1–#8)
+- [Additional video editing features](docs/ADDITIONAL_VIDEO_EDITING_FEATURES.md)
