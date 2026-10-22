@@ -22,3 +22,7 @@ __pycache__/
 
 # real names for votes_config.py
 votes_names_local.py
+
+# dashboard app
+node_modules/
+dashboard/dist/

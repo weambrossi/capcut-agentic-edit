@@ -17,11 +17,21 @@ Needs Node, Python 3, ffmpeg and CapCut desktop; `brew install whisper-cpp` for 
 ## Layout
 
 - `.claude/skills/` – edit styles: `funny-edit`, `promo-video`, `serious-video`
+- `dashboard/` – local page for browsing the styles
 - `CLAUDE.md` – project rules Claude loads every session
 - `make_*.py` – Python renderers for past projects (reference implementations for the skills)
 - `patches/` – local fixes applied to the vendored MCP server
 - `vendor/` – git submodules: [capcut-mcp-server](https://github.com/Atx-Guy/capcut-mcp-server),
   [VectCutAPI](https://github.com/sun-guannan/VectCutAPI)
+
+## Styles dashboard
+
+A small Vite + React page that lists every skill in `.claude/skills/` and renders what it does.
+It reads the SKILL.md files directly, so new or edited skills show up on their own.
+
+```bash
+cd dashboard && npm install && npm run dev   # http://localhost:5180
+```
 
 ## Adding a style
 
