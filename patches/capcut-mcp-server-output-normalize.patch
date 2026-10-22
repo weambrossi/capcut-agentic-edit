@@ -1,0 +1,17 @@
+diff --git a/src/services/api-client.ts b/src/services/api-client.ts
+index b76fb9e..8c06038 100644
+--- a/src/services/api-client.ts
++++ b/src/services/api-client.ts
+@@ -61,8 +61,10 @@ export class CapCutApiClient {
+         ...(params && { params }),
+       };
+ 
+-      const response = await this.client.request<ApiResponse<T>>(config);
+-      return response.data;
++      const response = await this.client.request<ApiResponse<T> & { output?: T }>(config);
++      // VectCutAPI returns its payload under `output`; normalize to `result`
++      const { output, ...rest } = response.data;
++      return { ...rest, result: rest.result ?? output };
+     } catch (error) {
+       if (error instanceof Error) {
+         return {

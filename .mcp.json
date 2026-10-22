@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "capcut": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["vendor/capcut-mcp-server/dist/index.js"],
+      "env": {
+        "CAPCUT_API_URL": "http://localhost:9001"
+      }
+    }
+  }
+}
