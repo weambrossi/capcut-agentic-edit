@@ -45,4 +45,7 @@ editing skill (a reusable capability). A style lists the editing skills it uses 
 - `votes_config.py`, `add_vote_heads.py`, `make_celebration.py`, `make_q23.py`, `make_broll.py`,
   `make_sfx.py` – "1008 funniest" vote video: graphics rendered in Python, then patched into the
   CapCut draft (reference for `funny-edit`).
+- `make_trinity_soccer.py` – 60 s 9:16 men's soccer hype edit from night-game AVCHD footage: EDL-driven
+  (`edit_decision_list.json` next to the output), keyframed 9:16 crop, optical-flow slow-mo, numpy night
+  grade, music composed from the Apple Loops "Stone Cold" kit. `--capcut-assets` exports shots + stems.
 - Transcribe footage for timing with `whisper-cli -m models/ggml-base.en.bin -f <audio.wav>`.
