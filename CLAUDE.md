@@ -47,5 +47,6 @@ editing skill (a reusable capability). A style lists the editing skills it uses 
   CapCut draft (reference for `funny-edit`).
 - `make_trinity_soccer.py` – 60 s 9:16 men's soccer hype edit from night-game AVCHD footage: EDL-driven
   (`edit_decision_list.json` next to the output), keyframed 9:16 crop, optical-flow slow-mo, numpy night
-  grade, music composed from the Apple Loops "Stone Cold" kit. `--capcut-assets` exports shots + stems.
+  grade, music composed from the Apple Loops "Stone Cold" kit. `--capcut-assets` exports shots + stems;
+  `--wide` renders the same cut as 16:9 (full frame, scoreboard digits softened in six shots).
 - Transcribe footage for timing with `whisper-cli -m models/ggml-base.en.bin -f <audio.wav>`.

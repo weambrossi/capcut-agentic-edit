@@ -4,6 +4,7 @@ Usage:
   python3 make_trinity_soccer.py --preview T1,T2,...   graded stills (before|after) at timeline times
   python3 make_trinity_soccer.py --music               build the music bed only
   python3 make_trinity_soccer.py                       full render
+  add --wide to any of the above for the 16:9 version (same cut, full 1920x1080 frame)
 
 The cut lives in edit_decision_list.json next to the output (one entry per shot: clip, in/out,
 speed, crop keyframes). Per shot, ffmpeg denoises, reframes to 9:16 with a keyframed crop,
@@ -26,7 +27,12 @@ OUT = os.path.join(SRC, "Trinity Hype Edit")
 EDL = os.path.join(OUT, "edit_decision_list.json")
 TMP = os.path.join(HERE, "out", "trinity_soccer")
 LOOPS = "/Library/Audio/Apple Loops/Apple/01 Hip Hop"
-W, H = 1080, 1920
+WIDE = "--wide" in sys.argv
+W, H = (1920, 1080) if WIDE else (1080, 1920)
+TAG = "16x9" if WIDE else "9x16"
+# shots where the 0-2 scoreboard is readable in the full 16:9 frame (the 9:16 crop framed it out)
+HIDE_SCOREBOARD_WIDE = {("00132", 10.6), ("00157", 22.75), ("00138", 7.0), ("00147", 19.0),
+                        ("00147", 19.625), ("00139", 4.5)}
 FPS_N, FPS_D = 24000, 1001
 FPS = FPS_N / FPS_D
 SR = 48000
@@ -61,11 +67,15 @@ def crop_expr(s):
 
 def shot_frames(s, nframes, scale=True):
     """Yield float32 RGB frames (H, W, 3) in 0..1 for one shot, reframed and retimed."""
-    vf = [f"hqdn3d=2.5:2:5:5", f"crop={CROP_W}:1080:x='{crop_expr(s)}':y=0"]
+    vf = ["hqdn3d=2.5:2:5:5"]
+    if WIDE:
+        scale = False  # full frame, no reframe
+    else:
+        vf.append(f"crop={CROP_W}:1080:x='{crop_expr(s)}':y=0")
     if s["speed"] < 0.999:
         vf += [f"minterpolate=fps={FPS / s['speed']:.4f}:mi_mode=mci:mc_mode=aobmc:me_mode=bidir:vsbmc=1",
                f"setpts=PTS/{s['speed']}", f"fps={FPS_N}/{FPS_D}"]
-    w, h = (W, H) if scale else (CROP_W, 1080)
+    w, h = (W, H) if (scale or WIDE) else (CROP_W, 1080)
     if scale:
         vf.append(f"scale={W}:{H}:flags=lanczos")
     cmd = ["ffmpeg", "-v", "error", "-ss", f"{s['in']:.3f}", "-i", os.path.join(SRC, s["clip"] + ".MTS"),
@@ -138,6 +148,72 @@ def grade(x, gain, wb):
     return np.clip(x, 0, 1)
 
 
+def _boxblur(x, r):
+    """Separable box blur via cumulative sums, edge-padded."""
+    for axis in (0, 1):
+        pad = [(0, 0)] * x.ndim
+        pad[axis] = (r + 1, r)
+        c = np.cumsum(np.pad(x, pad, mode="edge"), axis=axis)
+        x = (np.take(c, range(2 * r + 1, c.shape[axis]), axis=axis)
+             - np.take(c, range(0, c.shape[axis] - 2 * r - 1), axis=axis)) / (2 * r + 1)
+    return x
+
+
+class ScoreboardMask:
+    """Find the orange LED digits of the scoreboard in a 16:9 frame and melt them into a soft glow.
+
+    Only the LED pixels (plus a small feathered margin) are blurred, so a player passing in
+    front of the board stays sharp and there is no visible blur rectangle."""
+
+    def __init__(self):
+        self.box, self.miss = None, 0
+
+    @staticmethod
+    def led(a):
+        r, gr, b = a[..., 0], a[..., 1], a[..., 2]
+        sat = (r - b) / np.maximum(r, 1e-3)
+        return (r > 0.42) & (b < 0.42) & (r - b > 0.28) & (sat > 0.55) & (r > gr + 0.04)
+
+    def __call__(self, g):
+        st = 4
+        m = self.led(g[: int(g.shape[0] * 0.62): st, ::st])
+        ys, xs = np.nonzero(m)
+        box = None
+        if len(xs) >= 12:
+            mx, my = np.median(xs), np.median(ys)
+            k = (np.abs(xs - mx) < 70) & (np.abs(ys - my) < 35)
+            if k.sum() >= 10:
+                box = np.array([xs[k].min() * st, ys[k].min() * st, xs[k].max() * st + st, ys[k].max() * st + st], float)
+        if box is None:
+            self.miss += 1
+            if self.miss > 3:
+                self.box = None
+        else:
+            self.miss = 0
+            self.box = box if self.box is None else 0.5 * self.box + 0.5 * box
+        if self.box is None:
+            return g
+        x0, y0, x1, y1 = self.box.astype(int)
+        pad = 40
+        X0, Y0 = max(x0 - pad, 0), max(y0 - pad, 0)
+        X1, Y1 = min(x1 + pad, g.shape[1]), min(y1 + pad, g.shape[0])
+        if X1 - X0 < 16 or Y1 - Y0 < 16:
+            return g
+        patch = g[Y0:Y1, X0:X1]
+        led = self.led(patch).astype(np.float32)[..., None]
+        al = np.clip(_boxblur(led, 10) * 6, 0, 1)       # dilate the digits
+        al = _boxblur(al, 6)                              # feather the edge
+        rad = max(12, (y1 - y0) // 3)
+        bl = _boxblur(_boxblur(patch, rad), rad)
+        out = g.copy()
+        out[Y0:Y1, X0:X1] = patch * (1 - al) + bl * al
+        return out
+
+
+def needs_mask(s):
+    return WIDE and (s["clip"], s["in"]) in HIDE_SCOREBOARD_WIDE
+
+
 # ---------------------------------------------------------------- preview
 def preview(times):
     os.makedirs(os.path.join(TMP, "preview"), exist_ok=True)
@@ -149,9 +225,14 @@ def preview(times):
         gain, wb = shot_stats(frames[0])
         before = frames[k]
         after = grade(before, gain, wb)
+        if needs_mask(s):
+            sm = ScoreboardMask()
+            for f in frames[max(0, k - 4):k]:
+                sm(grade(f, gain, wb))
+            after = sm(after)
         im = np.concatenate([before, after], 1)
         Image.fromarray((im * 255).astype(np.uint8)).resize((W, H // 2)).save(
-            os.path.join(TMP, "preview", f"p_{T:05.2f}.jpg"), quality=88)
+            os.path.join(TMP, "preview", f"{TAG}_{T:05.2f}.jpg"), quality=88)
         print(f"{T:6.2f}s  {s['clip']} @{s['in'] + (T - s['t0']) * s['speed']:.2f}  gain={gain:.2f} wb={np.round(wb, 3)}")
 
 
@@ -170,10 +251,13 @@ def render_video(path):
     for i, s in enumerate(shots):
         n = s["f1"] - s["f0"]
         gain = wb = None
+        sm = ScoreboardMask() if needs_mask(s) else None
         for j, fr in enumerate(shot_frames(s, n)):
             if gain is None:
                 gain, wb = shot_stats(fr)
             g = grade(fr, gain, wb)
+            if sm is not None:
+                g = sm(g)
             t = (s["f0"] + j) / FPS
             if t > shots[-1]["t1"] - fade_out:
                 g = g * max(0.0, (shots[-1]["t1"] - t) / fade_out)
@@ -357,7 +441,7 @@ def capcut_assets():
     """Per-shot graded clips + audio stems into ~/Movies (CapCut is sandboxed there)."""
     dst = os.path.expanduser("~/Movies/Trinity Hype Edit")
     os.makedirs(os.path.join(dst, "shots"), exist_ok=True)
-    v = os.path.join(TMP, "video_only.mov")
+    v = os.path.join(TMP, "video_9x16.mov")
     manifest = []
     for i, s in enumerate(load_shots()):
         name = f"{i + 1:02d}_{s['section']}_{s['clip']}.mp4"
@@ -373,17 +457,17 @@ def capcut_assets():
 
 
 def mux():
-    v, a = os.path.join(TMP, "video_only.mov"), os.path.join(TMP, "mix.wav")
+    v, a = os.path.join(TMP, f"video_{TAG}.mov"), os.path.join(TMP, "mix.wav")
     # master: 10-bit HEVC + PCM audio
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", v, "-i", a, "-map", "0:v", "-map", "1:a",
                     "-c:v", "copy", "-c:a", "pcm_s24le", "-shortest",
-                    os.path.join(OUT, "Trinity_MSoccer_vs_Wesleyan_Hype_9x16_MASTER.mov")], check=True)
-    # upload: H.264 High, 8-bit, AAC - what Instagram ingests most reliably
+                    os.path.join(OUT, f"Trinity_MSoccer_vs_Wesleyan_Hype_{TAG}_MASTER.mov")], check=True)
+    # upload: H.264 High, 8-bit, AAC - what Instagram/YouTube ingest most reliably
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", v, "-i", a, "-map", "0:v", "-map", "1:a",
                     "-c:v", "libx264", "-preset", "slow", "-crf", "17", "-profile:v", "high",
                     "-pix_fmt", "yuv420p", "-maxrate", "40M", "-bufsize", "60M",
                     "-c:a", "aac", "-b:a", "320k", "-movflags", "+faststart", "-shortest",
-                    os.path.join(OUT, "Trinity_MSoccer_vs_Wesleyan_Hype_9x16_Instagram.mp4")], check=True)
+                    os.path.join(OUT, f"Trinity_MSoccer_vs_Wesleyan_Hype_{TAG}_{'YouTube' if WIDE else 'Instagram'}.mp4")], check=True)
 
 
 if __name__ == "__main__":
@@ -391,7 +475,7 @@ if __name__ == "__main__":
     if "--preview" in sys.argv:
         preview([float(v) for v in sys.argv[sys.argv.index("--preview") + 1].split(",")])
     elif "--video" in sys.argv:
-        render_video(os.path.join(TMP, "video_only.mov"))
+        render_video(os.path.join(TMP, f"video_{TAG}.mov"))
     elif "--audio" in sys.argv:
         render_audio(os.path.join(TMP, "mix.wav"))
     elif "--mux" in sys.argv:
@@ -399,6 +483,6 @@ if __name__ == "__main__":
     elif "--capcut-assets" in sys.argv:
         capcut_assets()
     else:
-        render_video(os.path.join(TMP, "video_only.mov"))
+        render_video(os.path.join(TMP, f"video_{TAG}.mov"))
         render_audio(os.path.join(TMP, "mix.wav"))
         mux()
