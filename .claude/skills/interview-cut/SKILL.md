@@ -79,8 +79,14 @@ Run `python3 interview_kit.py sheet <footage dir>` for 3 frames per clip, then
     between items.
   - **Spelling:** a name heard in the audio is a guess. Ask the user to confirm it before you
     call the edit finished.
-- No captions, music or SFX unless asked. B-roll natural sound at 0.35 volume. The render is
-  loudness-normalized to −16 LUFS with a −1.5 dB peak limit.
+- No captions, music or SFX unless asked.
+- **Even levels:** the kit matches every interview shot to −20 LUFS before the mix, because
+  off-camera questions are usually much louder than the answers and speakers differ. B-roll
+  natural sound sits 12 dB under speech. The mix is lifted to −16 LUFS with a −1.5 dBFS peak
+  limiter, a static gain with no pumping.
+- **Don't let the next line bleed in:** an out-point must end before the interviewer (or the
+  speaker) starts the next question, even a single word like "Hype song". If the next line follows
+  closely, cut in the gap between them.
 
 ## Process
 
