@@ -17,6 +17,8 @@ Pick the skill that matches the edit before planning it:
 - `.claude/skills/funny-edit` – meme pacing, punch zooms, SFX hits, pop-in stickers
 - `.claude/skills/promo-video` – 30 s vertical ad: hook, title card, one line per shot, CTA end card
 - `.claude/skills/serious-video` – calm pacing, clean captions, no gags
+- `.claude/skills/interview-cut` – minimal interview cut: answers interleaved per question, questions over
+  speaker-matched B-roll, lower thirds, no music/captions (`interview_kit.py`)
 
 Each style folder has a generated `references.md`: the user's inspiration videos for that style
 (local files in `references/videos/`) and what they like about each. Read it before planning an
@@ -45,4 +47,11 @@ editing skill (a reusable capability). A style lists the editing skills it uses 
 - `votes_config.py`, `add_vote_heads.py`, `make_celebration.py`, `make_q23.py`, `make_broll.py`,
   `make_sfx.py` – "1008 funniest" vote video: graphics rendered in Python, then patched into the
   CapCut draft (reference for `funny-edit`).
+- `make_trinity_soccer.py` – 60 s 9:16 men's soccer hype edit from night-game AVCHD footage: EDL-driven
+  (`edit_decision_list.json` next to the output), keyframed 9:16 crop, optical-flow slow-mo, numpy night
+  grade, music composed from the Apple Loops "Stone Cold" kit. `--capcut-assets` exports shots + stems;
+  `--wide` renders the same cut as 16:9 (full frame, scoreboard digits softened in six shots).
+- `make_trinity_interview.py` – ~79 s two-player pre-game interview (Trinity football), reference for
+  `interview-cut`: only the EDL; `interview_kit.py` does word-snapped cut points (`words`), contact sheets
+  (`sheet`), frame-exact rendering, lower thirds and `--verify` (transcript + A/V sync check).
 - Transcribe footage for timing with `whisper-cli -m models/ggml-base.en.bin -f <audio.wav>`.

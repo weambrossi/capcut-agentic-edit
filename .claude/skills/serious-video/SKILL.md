@@ -1,6 +1,6 @@
 ---
 name: serious-video
-description: Make a serious / sincere edit – interviews, tributes, recaps, announcements with weight, documentary-style pieces. Calm pacing, clean captions, music bed, no gags or meme SFX. Use when the user asks for a serious, emotional, professional, tribute, recap or documentary-style video.
+description: Make a serious / sincere edit – tributes, recaps, announcements with weight, documentary-style pieces. Calm pacing, clean captions, music bed, no gags or meme SFX. Use when the user asks for a serious, emotional, professional, tribute, recap or documentary-style video. For cutting up interviews or Q&As, use interview-cut instead.
 metadata:
   kind: style
   source: starter
