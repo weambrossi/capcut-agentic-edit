@@ -15,7 +15,7 @@ TRINITY_GOLD = (233, 190, 72)
 
 EDL = [
     # Open: location shot with nat sound, then the first question over a second location shot
-    dict(note="TRINITY sign", v="MVI_9688", vin=2.0, dur=2.6, nat_gain=0.35),
+    dict(note="TRINITY sign", v="MVI_9688", vin=2.0, dur=2.6),
     dict(note="Q: name, class year, position", a=LUKE, ain=6.30, aout=8.80, v="MVI_9690", vin=3.0),
     dict(note="Luke intro", a=LUKE, ain=8.92, aout=15.15,
          lower=("Luke Pickard", "Defensive End  ·  Class of 2026")),
@@ -33,14 +33,14 @@ EDL = [
     dict(note="Nolan: walk the field", a=NOLAN, ain=19.18, aout=22.75),
     dict(note="Nolan cont. over #11 walking up", a=NOLAN, ain=22.75, aout=26.15, v="MVI_9652", vin=12.5),
     dict(note="Nolan: first one on the field", a=NOLAN, ain=26.15, aout=28.95),
-    dict(note="Luke: no ritual", a=LUKE, ain=48.40, aout=50.25),
+    dict(note="Luke: no ritual", a=LUKE, ain=48.40, aout=49.85),
     dict(note="Luke: breakfast, over #17 & #7 walking up", a=LUKE, ain=63.88, aout=69.76, v="MVI_9653", vin=1.0),
     # Hype song
     dict(note="Q: hype song, over #41 on the bench", a=NOLAN, ain=30.25, aout=33.55, v="MVI_9683", vin=1.0),
     dict(note="Luke: Rick Ross & Lil Wayne", a=LUKE, ain=52.65, aout=59.62),
     dict(note="Nolan: Rocky theme song", a=NOLAN, ain=33.70, aout=36.20),
     # Close
-    dict(note="Outro: team watching", v="MVI_9691", vin=4.0, dur=4.5, nat_gain=0.35),
+    dict(note="Outro: team watching", v="MVI_9691", vin=4.0, dur=4.5),
 ]
 
 if __name__ == "__main__":

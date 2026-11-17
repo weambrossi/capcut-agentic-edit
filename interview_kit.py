@@ -20,7 +20,8 @@ EDL shot fields
     a, ain, aout    interview clip and in/out seconds. The shot's length comes from the audio.
     v, vin          picture clip and in-point. Defaults to the interview clip at ain. A different
                     v lays B-roll over the interview audio.
-    dur, nat_gain   B-roll with its own sound (no `a`): length in seconds and volume (0.35).
+    dur             B-roll with its own sound (no `a`): length in seconds. Its nat sound is
+                    level-matched 12 dB under speech; `nat_lufs=` on the shot overrides that.
     lower           (name, role) lower third on this shot.
     note            free text, printed while rendering.
 Clips are named without extension, for example "MVI_9702"; the first matching file in src_dir is used.
@@ -171,9 +172,12 @@ def cmd_sheet(args):
 
 class Edit:
     def __init__(self, src_dir, name, out_dir=None, size=(1920, 1080), fps=None,
-                 accent=WHITE, fade=0.6, lower_timing=(0.4, 3.6, 0.4), loudness=-16):
+                 accent=WHITE, fade=0.6, lower_timing=(0.4, 3.6, 0.4), loudness=-16,
+                 speech_lufs=-20, nat_lufs=-32):
         """size/fps: output format. fps defaults to the first interview clip's frame rate.
-        accent: lower-third bar colour (team colour). lower_timing: (fade-in start, hold, fade)."""
+        accent: lower-third bar colour (team colour). lower_timing: (fade-in start, hold, fade).
+        speech_lufs / nat_lufs: every interview shot is matched to speech_lufs and every B-roll
+        nat-sound shot to nat_lufs (12 dB under speech); the mix is then lifted to `loudness`."""
         self.src_dir = os.path.expanduser(src_dir)
         self.name = name
         self.out_dir = out_dir or os.path.join("out", name)
@@ -183,6 +187,8 @@ class Edit:
         self.fade = fade
         self.lt_in, self.lt_hold, self.lt_fade = lower_timing
         self.loudness = loudness
+        self.speech_lufs = speech_lufs
+        self.nat_lufs = nat_lufs
 
     # -- sources
     def src(self, clip):
@@ -238,6 +244,23 @@ class Edit:
         out.alpha_composite(text)
         out.save(path)
 
+    # -- audio levels
+    @staticmethod
+    def lufs(path, t, d):
+        """Integrated (gated) loudness of path[t : t+d], or None if it is silence."""
+        err = subprocess.run(["ffmpeg", "-nostats", "-ss", f"{t:.4f}", "-t", f"{d:.4f}", "-i", path,
+                              "-vn", "-af", "ebur128", "-f", "null", "-"],
+                             capture_output=True, text=True).stderr
+        vals = re.findall(r"I:\s+(-?[\d.]+|-inf) LUFS", err)
+        return float(vals[-1]) if vals and vals[-1] != "-inf" and float(vals[-1]) > -70 else None
+
+    def shot_gain(self, path, t, d, target):
+        """dB that brings this shot's speech (or nat sound) to `target` LUFS. Off-camera questions
+        are usually much louder than the on-camera answers, and people differ, so every shot is
+        matched before the final mix. Clamped to +-20 dB so a near-silent shot isn't blown up."""
+        level = self.lufs(path, t, max(d, 0.5))
+        return 0.0 if level is None else float(np.clip(target - level, -20, 20))
+
     def _fit(self):
         return (f"scale={self.W}:{self.H}:force_original_aspect_ratio=decrease,"
                 f"pad={self.W}:{self.H}:(ow-iw)/2:(oh-ih)/2,setsar=1")
@@ -248,9 +271,10 @@ class Edit:
         cmd = ["ffmpeg", "-v", "error", "-y", "-ss", str(s["vin"]), "-t", pad, "-i", s["v_path"]]
         if "a" in s:
             cmd += ["-ss", str(s["ain"]), "-t", pad, "-i", s["a_path"]]
-            amap, gain = "1:a", 1.0
+            amap, gain = "1:a", self.shot_gain(s["a_path"], s["ain"], d, self.speech_lufs)
         else:
-            amap, gain = "0:a", s.get("nat_gain", 0.35)
+            amap, gain = "0:a", self.shot_gain(s["v_path"], s["vin"], d, s.get("nat_lufs", self.nat_lufs))
+        s["gain_db"] = round(gain, 1)
         vf = f"[0:v]{self._fit()},fps={self.fps},format=yuv420p[v]"
         if "lower" in s:
             png = path + ".lower.png"
@@ -262,7 +286,7 @@ class Edit:
                   f"[0:v]{self._fit()}[bg];[bg][lt]overlay=0:0:shortest=1,"
                   f"fps={self.fps},format=yuv420p[v]")
         # 15 ms audio fades on every cut so joins never click
-        af = (f"volume={gain},apad,atrim=end={d:.6f},asetpts=PTS-STARTPTS,"
+        af = (f"volume={gain:.2f}dB,apad,atrim=end={d:.6f},asetpts=PTS-STARTPTS,"
               f"afade=t=in:d=0.015,afade=t=out:st={d - 0.015:.6f}:d=0.015")
         cmd += ["-filter_complex", vf, "-map", "[v]", "-map", amap, "-af", af,
                 "-frames:v", str(s["frames"]), "-ac", "2", "-ar", "48000",
@@ -297,7 +321,10 @@ class Edit:
             fd = self.fade
             run(["ffmpeg", "-v", "error", "-y", "-f", "concat", "-safe", "0", "-i", lst,
                  "-vf", f"fade=t=in:d={fd},fade=t=out:st={total - fd:.3f}:d={fd}",
-                 "-af", f"loudnorm=I={self.loudness}:TP=-1.5:LRA=11,afade=t=in:d={fd / 2},"
+                 # shots are already level-matched, so a static gain + peak limiter (-1.5 dBFS)
+                 # instead of loudnorm, whose dynamic mode rides the gain shot to shot
+                 "-af", f"volume={self.loudness - self.speech_lufs}dB,"
+                        f"alimiter=limit=0.84:level=false,afade=t=in:d={fd / 2},"
                         f"afade=t=out:st={total - fd:.3f}:d={fd}",
                  "-c:v", "libx264", "-preset", "slow", "-crf", "18", "-pix_fmt", "yuv420p",
                  "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-movflags", "+faststart", out])
